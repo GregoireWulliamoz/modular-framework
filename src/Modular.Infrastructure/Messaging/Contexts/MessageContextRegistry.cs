@@ -1,5 +1,4 @@
-﻿using System;
-using Microsoft.Extensions.Caching.Memory;
+﻿using Microsoft.Extensions.Caching.Memory;
 using Modular.Abstractions.Messaging;
 
 namespace Modular.Infrastructure.Messaging.Contexts;

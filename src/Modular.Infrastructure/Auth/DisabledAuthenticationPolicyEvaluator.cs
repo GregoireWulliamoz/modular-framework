@@ -1,5 +1,4 @@
 using System.Security.Claims;
-using System.Threading.Tasks;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
@@ -18,8 +17,6 @@ public sealed class DisabledAuthenticationPolicyEvaluator : IPolicyEvaluator
     }
 
     public Task<PolicyAuthorizationResult> AuthorizeAsync(AuthorizationPolicy policy,
-        AuthenticateResult authenticationResult, HttpContext context, object resource)
-    {
-        return Task.FromResult(PolicyAuthorizationResult.Success());
-    }
+        AuthenticateResult authenticationResult, HttpContext context, object resource) =>
+        Task.FromResult(PolicyAuthorizationResult.Success());
 }

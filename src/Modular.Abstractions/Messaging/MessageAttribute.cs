@@ -1,5 +1,3 @@
-using System;
-
 namespace Modular.Abstractions.Messaging;
 
 [AttributeUsage(AttributeTargets.Class)]

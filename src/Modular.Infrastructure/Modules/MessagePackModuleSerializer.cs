@@ -1,12 +1,12 @@
-using System;
 using MessagePack;
+using MessagePack.Resolvers;
 
 namespace Modular.Infrastructure.Modules;
 
 public class MessagePackModuleSerializer : IModuleSerializer
 {
     private readonly MessagePackSerializerOptions _options =
-        MessagePack.Resolvers.ContractlessStandardResolverAllowPrivate.Options;
+        ContractlessStandardResolverAllowPrivate.Options;
 
     public byte[] Serialize<T>(T value) => MessagePackSerializer.Serialize(value, _options);
 

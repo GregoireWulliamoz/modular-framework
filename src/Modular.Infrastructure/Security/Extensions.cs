@@ -1,5 +1,4 @@
-﻿using System;
-using Microsoft.Extensions.DependencyInjection;
+﻿using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Modular.Infrastructure.Security.Encryption;
 
@@ -10,7 +9,7 @@ public static class Extensions
     public static IServiceCollection AddSecurity(this IServiceCollection services)
     {
         var securityOptions = services.GetOptions<SecurityOptions>("security");
-        using (var serviceProvider = services.BuildServiceProvider())
+        using (ServiceProvider serviceProvider = services.BuildServiceProvider())
         {
             var logger = serviceProvider.GetRequiredService<ILogger<ISecurityProvider>>();
             logger.LogInformation(securityOptions.Encryption.Enabled
@@ -25,7 +24,7 @@ public static class Extensions
                 throw new ArgumentException("Empty encryption key.", nameof(securityOptions.Encryption.Key));
             }
 
-            var keyLength = securityOptions.Encryption.Key.Length;
+            int keyLength = securityOptions.Encryption.Key.Length;
             if (keyLength != 32)
             {
                 throw new ArgumentException($"Invalid encryption key length: {keyLength} (required: 32 chars).",

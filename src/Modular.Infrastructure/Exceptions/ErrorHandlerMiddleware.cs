@@ -1,8 +1,7 @@
-﻿using System;
-using System.Net;
-using System.Threading.Tasks;
+﻿using System.Net;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
+using Modular.Abstractions.Exceptions;
 
 namespace Modular.Infrastructure.Exceptions;
 
@@ -17,7 +16,7 @@ public class ErrorHandlerMiddleware : IMiddleware
         _exceptionCompositionRoot = exceptionCompositionRoot;
         _logger = logger;
     }
-        
+
     public async Task InvokeAsync(HttpContext context, RequestDelegate next)
     {
         try
@@ -33,14 +32,14 @@ public class ErrorHandlerMiddleware : IMiddleware
 
     private async Task HandleErrorAsync(HttpContext context, Exception exception)
     {
-        var errorResponse = _exceptionCompositionRoot.Map(exception);
-        context.Response.StatusCode = (int) (errorResponse?.StatusCode ?? HttpStatusCode.InternalServerError);
-        var response = errorResponse?.Response;
+        ExceptionResponse errorResponse = _exceptionCompositionRoot.Map(exception);
+        context.Response.StatusCode = (int)(errorResponse?.StatusCode ?? HttpStatusCode.InternalServerError);
+        object response = errorResponse?.Response;
         if (response is null)
         {
             return;
         }
-            
+
         await context.Response.WriteAsJsonAsync(response);
     }
 }

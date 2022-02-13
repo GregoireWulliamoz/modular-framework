@@ -1,7 +1,4 @@
-﻿using System.Threading;
-using System.Threading.Tasks;
-
-namespace Modular.Abstractions.Queries;
+﻿namespace Modular.Abstractions.Queries;
 
 public interface IQueryHandler<in TQuery, TResult> where TQuery : class, IQuery<TResult>
 {

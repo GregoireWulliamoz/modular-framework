@@ -1,7 +1,4 @@
-﻿using System.Threading;
-using System.Threading.Tasks;
-
-namespace Modular.Abstractions.Events;
+﻿namespace Modular.Abstractions.Events;
 
 public interface IEventHandler<in TEvent> where TEvent : class, IEvent
 {

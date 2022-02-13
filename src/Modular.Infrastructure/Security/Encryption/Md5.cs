@@ -8,9 +8,9 @@ public sealed class Md5 : IMd5
     public string Calculate(string value)
     {
         using var md5Generator = MD5.Create();
-        var hash = md5Generator.ComputeHash(Encoding.ASCII.GetBytes(value));
+        byte[] hash = md5Generator.ComputeHash(Encoding.ASCII.GetBytes(value));
         var stringBuilder = new StringBuilder();
-        foreach (var @byte in hash)
+        foreach (byte @byte in hash)
         {
             stringBuilder.Append(@byte.ToString("X2"));
         }

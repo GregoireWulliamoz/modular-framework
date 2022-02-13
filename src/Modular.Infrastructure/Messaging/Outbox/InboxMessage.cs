@@ -1,5 +1,3 @@
-using System;
-
 namespace Modular.Infrastructure.Messaging.Outbox;
 
 public class InboxMessage

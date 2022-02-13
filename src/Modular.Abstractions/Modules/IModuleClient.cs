@@ -1,7 +1,4 @@
-﻿using System.Threading;
-using System.Threading.Tasks;
-
-namespace Modular.Abstractions.Modules;
+﻿namespace Modular.Abstractions.Modules;
 
 public interface IModuleClient
 {

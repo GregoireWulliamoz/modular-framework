@@ -1,10 +1,5 @@
-﻿using System;
-using System.Collections.Concurrent;
-using System.Collections.Generic;
-using System.Linq;
+﻿using System.Collections.Concurrent;
 using System.Reflection;
-using System.Threading;
-using System.Threading.Tasks;
 using Modular.Abstractions.Commands;
 using Modular.Abstractions.Messaging;
 using Modular.Abstractions.Modules;
@@ -14,11 +9,11 @@ namespace Modular.Infrastructure.Modules;
 
 public sealed class ModuleClient : IModuleClient
 {
+    private readonly IMessageContextProvider _messageContextProvider;
+    private readonly IMessageContextRegistry _messageContextRegistry;
     private readonly ConcurrentDictionary<Type, MessageAttribute> _messages = new();
     private readonly IModuleRegistry _moduleRegistry;
     private readonly IModuleSerializer _moduleSerializer;
-    private readonly IMessageContextRegistry _messageContextRegistry;
-    private readonly IMessageContextProvider _messageContextProvider;
 
     public ModuleClient(IModuleRegistry moduleRegistry, IModuleSerializer moduleSerializer,
         IMessageContextRegistry messageContextRegistry, IMessageContextProvider messageContextProvider)
@@ -35,31 +30,31 @@ public sealed class ModuleClient : IModuleClient
     public async Task<TResult> SendAsync<TResult>(string path, object request,
         CancellationToken cancellationToken = default) where TResult : class
     {
-        var registration = _moduleRegistry.GetRequestRegistration(path);
+        ModuleRequestRegistration registration = _moduleRegistry.GetRequestRegistration(path);
         if (registration is null)
         {
             throw new InvalidOperationException($"No action has been defined for path: '{path}'.");
         }
 
-        var receiverRequest = TranslateType(request, registration.RequestType);
-        var result = await registration.Action(receiverRequest, cancellationToken);
+        object receiverRequest = TranslateType(request, registration.RequestType);
+        object result = await registration.Action(receiverRequest, cancellationToken);
 
         return result is null ? null : TranslateType<TResult>(result);
     }
 
     public async Task PublishAsync(object message, CancellationToken cancellationToken = default)
     {
-        var module = message.GetModuleName();
-        var key = message.GetType().Name;
-        var registrations = _moduleRegistry
+        string module = message.GetModuleName();
+        string key = message.GetType().Name;
+        IEnumerable<ModuleBroadcastRegistration> registrations = _moduleRegistry
             .GetBroadcastRegistrations(key)
             .Where(r => r.ReceiverType != message.GetType());
 
         var tasks = new List<Task>();
 
-        foreach (var registration in registrations)
+        foreach (ModuleBroadcastRegistration registration in registrations)
         {
-            if (!_messages.TryGetValue(registration.ReceiverType, out var messageAttribute))
+            if (!_messages.TryGetValue(registration.ReceiverType, out MessageAttribute messageAttribute))
             {
                 messageAttribute = registration.ReceiverType.GetCustomAttribute<MessageAttribute>();
                 if (message is ICommand)
@@ -80,11 +75,11 @@ public sealed class ModuleClient : IModuleClient
                 continue;
             }
 
-            var action = registration.Action;
-            var receiverMessage = TranslateType(message, registration.ReceiverType);
+            Func<object, CancellationToken, Task> action = registration.Action;
+            object receiverMessage = TranslateType(message, registration.ReceiverType);
             if (message is IMessage messageData)
             {
-                var messageContext = _messageContextProvider.Get(messageData);
+                IMessageContext messageContext = _messageContextProvider.Get(messageData);
                 _messageContextRegistry.Set((IMessage)receiverMessage, messageContext);
             }
 

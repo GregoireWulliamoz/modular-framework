@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using System.Reflection;
+﻿using System.Reflection;
 using Microsoft.Extensions.Configuration;
 using Modular.Abstractions.Modules;
 
@@ -12,21 +8,21 @@ public static class ModuleLoader
 {
     public static IList<Assembly> LoadAssemblies(IConfiguration configuration, string modulePart)
     {
-        var assemblies = AppDomain.CurrentDomain.GetAssemblies().ToList();
-        var locations = assemblies.Where(x => !x.IsDynamic).Select(x => x.Location).ToArray();
-        var files = Directory.GetFiles(AppDomain.CurrentDomain.BaseDirectory, "*.dll")
+        List<Assembly> assemblies = AppDomain.CurrentDomain.GetAssemblies().ToList();
+        string[] locations = assemblies.Where(x => !x.IsDynamic).Select(x => x.Location).ToArray();
+        List<string> files = Directory.GetFiles(AppDomain.CurrentDomain.BaseDirectory, "*.dll")
             .Where(x => !locations.Contains(x, StringComparer.InvariantCultureIgnoreCase))
             .ToList();
 
         var disabledModules = new List<string>();
-        foreach (var file in files)
+        foreach (string file in files)
         {
             if (!file.Contains(modulePart))
             {
                 continue;
             }
 
-            var moduleName = file.Split(modulePart)[1].Split(".")[0].ToLowerInvariant();
+            string moduleName = file.Split(modulePart)[1].Split(".")[0].ToLowerInvariant();
             var enabled = configuration.GetValue<bool>($"{moduleName}:module:enabled");
             if (!enabled)
             {
@@ -34,11 +30,11 @@ public static class ModuleLoader
             }
         }
 
-        foreach (var disabledModule in disabledModules)
+        foreach (string disabledModule in disabledModules)
         {
             files.Remove(disabledModule);
         }
-            
+
         files.ForEach(x => assemblies.Add(AppDomain.CurrentDomain.Load(AssemblyName.GetAssemblyName(x))));
 
         return assemblies;

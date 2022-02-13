@@ -1,5 +1,4 @@
-﻿using System;
-using Microsoft.AspNetCore.Http;
+﻿using Microsoft.AspNetCore.Http;
 using Modular.Abstractions.Contexts;
 using Modular.Infrastructure.Api;
 
@@ -14,7 +13,9 @@ public class Context : IContext
     public string UserAgent { get; }
     public IIdentityContext Identity { get; }
 
-    public Context() : this(Guid.NewGuid(), $"{Guid.NewGuid():N}", null)
+    public static IContext Empty => new Context();
+
+    public Context() : this(Guid.NewGuid(), $"{Guid.NewGuid():N}")
     {
     }
 
@@ -33,6 +34,4 @@ public class Context : IContext
         IpAddress = ipAddress;
         UserAgent = userAgent;
     }
-
-    public static IContext Empty => new Context();
 }

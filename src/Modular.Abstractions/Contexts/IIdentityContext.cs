@@ -1,7 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-
-namespace Modular.Abstractions.Contexts;
+﻿namespace Modular.Abstractions.Contexts;
 
 public interface IIdentityContext
 {

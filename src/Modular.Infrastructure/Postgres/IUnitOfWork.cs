@@ -1,7 +1,4 @@
-﻿using System;
-using System.Threading.Tasks;
-
-namespace Modular.Infrastructure.Postgres;
+﻿namespace Modular.Infrastructure.Postgres;
 
 public interface IUnitOfWork
 {

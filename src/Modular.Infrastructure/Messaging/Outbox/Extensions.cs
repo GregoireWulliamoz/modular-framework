@@ -18,8 +18,8 @@ public static class Extensions
         services.AddTransient<IOutbox, EfOutbox<T>>();
         services.AddTransient<EfInbox<T>>();
         services.AddTransient<EfOutbox<T>>();
-            
-        using var serviceProvider = services.BuildServiceProvider();
+
+        using ServiceProvider serviceProvider = services.BuildServiceProvider();
         serviceProvider.GetRequiredService<InboxTypeRegistry>().Register<EfInbox<T>>();
         serviceProvider.GetRequiredService<OutboxTypeRegistry>().Register<EfOutbox<T>>();
 

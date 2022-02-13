@@ -1,6 +1,4 @@
-﻿using System.Collections.Generic;
-
-namespace Modular.Infrastructure.Modules;
+﻿namespace Modular.Infrastructure.Modules;
 
 public class ModuleInfoProvider
 {

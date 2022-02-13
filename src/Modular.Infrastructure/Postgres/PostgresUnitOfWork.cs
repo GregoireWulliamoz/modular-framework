@@ -1,6 +1,5 @@
-﻿using System;
-using System.Threading.Tasks;
-using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Storage;
 
 namespace Modular.Infrastructure.Postgres;
 
@@ -15,7 +14,7 @@ public abstract class PostgresUnitOfWork<T> : IUnitOfWork where T : DbContext
 
     public async Task ExecuteAsync(Func<Task> action)
     {
-        await using var transaction = await _dbContext.Database.BeginTransactionAsync();
+        await using IDbContextTransaction transaction = await _dbContext.Database.BeginTransactionAsync();
         try
         {
             await action();

@@ -1,6 +1,4 @@
-﻿using System.Threading;
-using System.Threading.Tasks;
-using Modular.Abstractions.Messaging;
+﻿using Modular.Abstractions.Messaging;
 
 namespace Modular.Infrastructure.Messaging.Dispatchers;
 
@@ -18,7 +16,7 @@ public sealed class AsyncMessageDispatcher : IAsyncMessageDispatcher
     public async Task PublishAsync<T>(T message, CancellationToken cancellationToken = default)
         where T : class, IMessage
     {
-        var messageContext = _messageContextProvider.Get(message);
+        IMessageContext messageContext = _messageContextProvider.Get(message);
         await _channel.Writer.WriteAsync(new MessageEnvelope(message, messageContext), cancellationToken);
     }
 }

@@ -1,5 +1,3 @@
-using System.Threading;
-using System.Threading.Tasks;
 using Humanizer;
 using Microsoft.Extensions.Logging;
 using Modular.Abstractions.Contexts;
@@ -11,8 +9,8 @@ namespace Modular.Infrastructure.Logging.Decorators;
 public sealed class LoggingQueryHandlerDecorator<TQuery, TResult> : IQueryHandler<TQuery, TResult>
     where TQuery : class, IQuery<TResult>
 {
-    private readonly IQueryHandler<TQuery, TResult> _handler;
     private readonly IContext _context;
+    private readonly IQueryHandler<TQuery, TResult> _handler;
     private readonly ILogger<LoggingQueryHandlerDecorator<TQuery, TResult>> _logger;
 
     public LoggingQueryHandlerDecorator(IQueryHandler<TQuery, TResult> handler,
@@ -25,16 +23,18 @@ public sealed class LoggingQueryHandlerDecorator<TQuery, TResult> : IQueryHandle
 
     public async Task<TResult> HandleAsync(TQuery query, CancellationToken cancellationToken = default)
     {
-        var module = query.GetModuleName();
-        var name = query.GetType().Name.Underscore();
-        var requestId = _context.RequestId;
-        var correlationId = _context.CorrelationId;
-        var traceId = _context.TraceId;
-        var userId = _context.Identity?.Id;
-        _logger.LogInformation("Handling a query: {Name} ({Module}) [Request ID: {RequestId}, Correlation ID: {CorrelationId}, Trace ID: '{TraceId}', User ID: '{UserId}]...",
+        string module = query.GetModuleName();
+        string name = query.GetType().Name.Underscore();
+        Guid requestId = _context.RequestId;
+        Guid correlationId = _context.CorrelationId;
+        string traceId = _context.TraceId;
+        Guid? userId = _context.Identity?.Id;
+        _logger.LogInformation(
+            "Handling a query: {Name} ({Module}) [Request ID: {RequestId}, Correlation ID: {CorrelationId}, Trace ID: '{TraceId}', User ID: '{UserId}]...",
             name, module, requestId, correlationId, traceId, userId);
-        var result = await _handler.HandleAsync(query, cancellationToken);
-        _logger.LogInformation("Handled a query: {Name} ({Module}) [Request ID: {RequestId}, Correlation ID: {CorrelationId}, Trace ID: '{TraceId}', User ID: '{UserId}]",
+        TResult result = await _handler.HandleAsync(query, cancellationToken);
+        _logger.LogInformation(
+            "Handled a query: {Name} ({Module}) [Request ID: {RequestId}, Correlation ID: {CorrelationId}, Trace ID: '{TraceId}', User ID: '{UserId}]",
             name, module, requestId, correlationId, traceId, userId);
 
         return result;

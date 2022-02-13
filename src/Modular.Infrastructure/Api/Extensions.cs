@@ -1,9 +1,8 @@
-﻿using System;
-using System.Linq;
-using System.Linq.Expressions;
+﻿using System.Linq.Expressions;
 using System.Reflection;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Primitives;
 
 namespace Modular.Infrastructure.Api;
 
@@ -18,16 +17,16 @@ public static class Extensions
     private static TModel Bind<TModel, TProperty>(this TModel model, Expression<Func<TModel, TProperty>> expression,
         object value)
     {
-        var memberExpression = expression.Body as MemberExpression ??
-                               ((UnaryExpression) expression.Body).Operand as MemberExpression;
+        MemberExpression memberExpression = expression.Body as MemberExpression ??
+                                            ((UnaryExpression)expression.Body).Operand as MemberExpression;
         if (memberExpression is null)
         {
             return model;
         }
 
-        var propertyName = memberExpression.Member.Name.ToLowerInvariant();
-        var modelType = model.GetType();
-        var field = modelType.GetFields(BindingFlags.Instance | BindingFlags.NonPublic)
+        string propertyName = memberExpression.Member.Name.ToLowerInvariant();
+        Type modelType = model.GetType();
+        FieldInfo field = modelType.GetFields(BindingFlags.Instance | BindingFlags.NonPublic)
             .SingleOrDefault(x => x.Name.ToLowerInvariant().StartsWith($"<{propertyName}>"));
         if (field is null)
         {
@@ -42,18 +41,18 @@ public static class Extensions
     public static IServiceCollection AddCorsPolicy(this IServiceCollection services)
     {
         var corsOptions = services.GetOptions<CorsOptions>("cors");
-            
+
         return services
             .AddSingleton(corsOptions)
             .AddCors(cors =>
             {
-                var allowedHeaders = corsOptions.AllowedHeaders ?? Enumerable.Empty<string>();
-                var allowedMethods = corsOptions.AllowedMethods ?? Enumerable.Empty<string>();
-                var allowedOrigins = corsOptions.AllowedOrigins ?? Enumerable.Empty<string>();
-                var exposedHeaders = corsOptions.ExposedHeaders ?? Enumerable.Empty<string>();
+                IEnumerable<string> allowedHeaders = corsOptions.AllowedHeaders ?? Enumerable.Empty<string>();
+                IEnumerable<string> allowedMethods = corsOptions.AllowedMethods ?? Enumerable.Empty<string>();
+                IEnumerable<string> allowedOrigins = corsOptions.AllowedOrigins ?? Enumerable.Empty<string>();
+                IEnumerable<string> exposedHeaders = corsOptions.ExposedHeaders ?? Enumerable.Empty<string>();
                 cors.AddPolicy("cors", corsBuilder =>
                 {
-                    var origins = allowedOrigins.ToArray();
+                    string[] origins = allowedOrigins.ToArray();
                     if (corsOptions.AllowCredentials && origins.FirstOrDefault() != "*")
                     {
                         corsBuilder.AllowCredentials();
@@ -70,18 +69,18 @@ public static class Extensions
                 });
             });
     }
-        
+
     public static string GetUserIpAddress(this HttpContext context)
     {
         if (context is null)
         {
             return string.Empty;
         }
-            
+
         var ipAddress = context.Connection.RemoteIpAddress?.ToString();
-        if (context.Request.Headers.TryGetValue("x-forwarded-for", out var forwardedFor))
+        if (context.Request.Headers.TryGetValue("x-forwarded-for", out StringValues forwardedFor))
         {
-            var ipAddresses = forwardedFor.ToString().Split(",", StringSplitOptions.RemoveEmptyEntries);
+            string[] ipAddresses = forwardedFor.ToString().Split(",", StringSplitOptions.RemoveEmptyEntries);
             if (ipAddresses.Any())
             {
                 ipAddress = ipAddresses[0];

@@ -1,6 +1,4 @@
-﻿using System;
-
-namespace Modular.Infrastructure.Serialization;
+﻿namespace Modular.Infrastructure.Serialization;
 
 public interface IJsonSerializer
 {

@@ -1,7 +1,5 @@
-using System;
-using System.Linq;
-using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Storage;
 using Microsoft.Extensions.Logging;
 using Modular.Abstractions.Time;
 
@@ -9,10 +7,10 @@ namespace Modular.Infrastructure.Messaging.Outbox;
 
 public class EfInbox<T> : IInbox where T : DbContext
 {
-    private readonly T _dbContext;
-    private readonly DbSet<InboxMessage> _set;
     private readonly IClock _clock;
+    private readonly T _dbContext;
     private readonly ILogger<EfInbox<T>> _logger;
+    private readonly DbSet<InboxMessage> _set;
     private readonly bool _transactionsEnabled;
 
     public bool Enabled { get; }
@@ -29,14 +27,14 @@ public class EfInbox<T> : IInbox where T : DbContext
 
     public async Task HandleAsync(Guid messageId, string name, Func<Task> handler)
     {
-        var module = _dbContext.GetModuleName();
+        string module = _dbContext.GetModuleName();
         if (!Enabled)
         {
             _logger.LogWarning($"Outbox is disabled ('{module}'), incoming messages won't be processed.");
             return;
         }
 
-        var saveToInbox = messageId != Guid.Empty;
+        bool saveToInbox = messageId != Guid.Empty;
         var inboxMessage = new InboxMessage
         {
             Id = messageId,
@@ -57,7 +55,7 @@ public class EfInbox<T> : IInbox where T : DbContext
             await _dbContext.SaveChangesAsync();
         }
 
-        var transaction = _transactionsEnabled ? await _dbContext.Database.BeginTransactionAsync() : null;
+        IDbContextTransaction transaction = _transactionsEnabled ? await _dbContext.Database.BeginTransactionAsync() : null;
         try
         {
             await handler();
@@ -100,15 +98,15 @@ public class EfInbox<T> : IInbox where T : DbContext
 
     public async Task CleanupAsync(DateTime? to = null)
     {
-        var module = _dbContext.GetModuleName();
+        string module = _dbContext.GetModuleName();
         if (!Enabled)
         {
             _logger.LogWarning($"Outbox is disabled ('{module}'), incoming messages won't be cleaned up.");
             return;
         }
 
-        var dateTo = to ?? _clock.CurrentDate();
-        var sentMessages = await _set.Where(x => x.ReceivedAt <= dateTo).ToListAsync();
+        DateTime dateTo = to ?? _clock.CurrentDate();
+        List<InboxMessage> sentMessages = await _set.Where(x => x.ReceivedAt <= dateTo).ToListAsync();
         if (!sentMessages.Any())
         {
             _logger.LogTrace($"No received messages found in inbox ('{module}') till: {dateTo}.");

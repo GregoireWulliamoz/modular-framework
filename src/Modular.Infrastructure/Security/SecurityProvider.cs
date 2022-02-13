@@ -7,10 +7,10 @@ public sealed class SecurityProvider : ISecurityProvider
 {
     private readonly IEncryptor _encryptor;
     private readonly IHasher _hasher;
-    private readonly IRng _rng;
-    private readonly UrlEncoder _urlEncoder;
-    private readonly SecurityOptions _securityOptions;
     private readonly string _key;
+    private readonly IRng _rng;
+    private readonly SecurityOptions _securityOptions;
+    private readonly UrlEncoder _urlEncoder;
 
     public SecurityProvider(IEncryptor encryptor, IHasher hasher,
         IRng rng, UrlEncoder urlEncoder, SecurityOptions securityOptions)

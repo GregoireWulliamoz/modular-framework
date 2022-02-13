@@ -1,6 +1,4 @@
-﻿using System;
-
-namespace Modular.Infrastructure;
+﻿namespace Modular.Infrastructure;
 
 // Marker
 [AttributeUsage(AttributeTargets.Class)]

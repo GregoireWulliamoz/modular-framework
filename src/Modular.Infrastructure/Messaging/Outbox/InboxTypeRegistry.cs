@@ -1,15 +1,8 @@
-﻿using System;
-using System.Collections.Generic;
-
-namespace Modular.Infrastructure.Messaging.Outbox;
+﻿namespace Modular.Infrastructure.Messaging.Outbox;
 
 public class InboxTypeRegistry
 {
     private readonly Dictionary<string, Type> _types = new();
-
-    public void Register<T>() where T : IInbox => _types[GetKey<T>()] = typeof(T);
-
-    public Type Resolve<T>() => _types.TryGetValue(GetKey<T>(), out var type) ? type : null;
 
     private static string GetKey<T>() => GetKey(typeof(T));
 
@@ -17,4 +10,8 @@ public class InboxTypeRegistry
         => type.IsGenericType
             ? $"{type.GenericTypeArguments[0].GetModuleName()}"
             : $"{type.GetModuleName()}";
+
+    public void Register<T>() where T : IInbox => _types[GetKey<T>()] = typeof(T);
+
+    public Type Resolve<T>() => _types.TryGetValue(GetKey<T>(), out Type type) ? type : null;
 }

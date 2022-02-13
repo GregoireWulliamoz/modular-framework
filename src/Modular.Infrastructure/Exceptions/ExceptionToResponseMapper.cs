@@ -1,5 +1,4 @@
-﻿using System;
-using System.Collections.Concurrent;
+﻿using System.Collections.Concurrent;
 using System.Net;
 using Humanizer;
 using Modular.Abstractions.Exceptions;
@@ -9,6 +8,12 @@ namespace Modular.Infrastructure.Exceptions;
 public class ExceptionToResponseMapper : IExceptionToResponseMapper
 {
     private static readonly ConcurrentDictionary<Type, string> Codes = new();
+
+    private static string GetErrorCode(object exception)
+    {
+        Type type = exception.GetType();
+        return Codes.GetOrAdd(type, type.Name.Underscore().Replace("_exception", string.Empty));
+    }
 
     public ExceptionResponse Map(Exception exception)
         => exception switch
@@ -22,10 +27,4 @@ public class ExceptionToResponseMapper : IExceptionToResponseMapper
     private record Error(string Code, string Message);
 
     private record ErrorsResponse(params Error[] Errors);
-
-    private static string GetErrorCode(object exception)
-    {
-        var type = exception.GetType();
-        return Codes.GetOrAdd(type, type.Name.Underscore().Replace("_exception", string.Empty));
-    }
 }
