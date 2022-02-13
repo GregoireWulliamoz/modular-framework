@@ -1,6 +1,4 @@
-﻿using System;
-
-namespace Modular.Abstractions.Contexts;
+﻿namespace Modular.Abstractions.Contexts;
 
 public interface IContext
 {

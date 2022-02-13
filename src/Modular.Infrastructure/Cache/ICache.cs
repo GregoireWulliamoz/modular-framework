@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Threading.Tasks;
-
-namespace Modular.Infrastructure.Cache;
+﻿namespace Modular.Infrastructure.Cache;
 
 public interface ICache
 {

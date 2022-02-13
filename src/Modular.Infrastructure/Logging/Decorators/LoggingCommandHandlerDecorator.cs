@@ -1,6 +1,3 @@
-using System;
-using System.Threading;
-using System.Threading.Tasks;
 using Humanizer;
 using Microsoft.Extensions.Logging;
 using Modular.Abstractions.Commands;
@@ -12,10 +9,10 @@ namespace Modular.Infrastructure.Logging.Decorators;
 [Decorator]
 public sealed class LoggingCommandHandlerDecorator<T> : ICommandHandler<T> where T : class, ICommand
 {
-    private readonly ICommandHandler<T> _handler;
-    private readonly IMessageContextProvider _messageContextProvider;
     private readonly IContext _context;
+    private readonly ICommandHandler<T> _handler;
     private readonly ILogger<LoggingCommandHandlerDecorator<T>> _logger;
+    private readonly IMessageContextProvider _messageContextProvider;
 
     public LoggingCommandHandlerDecorator(ICommandHandler<T> handler, IMessageContextProvider messageContextProvider,
         IContext context, ILogger<LoggingCommandHandlerDecorator<T>> logger)
@@ -28,18 +25,20 @@ public sealed class LoggingCommandHandlerDecorator<T> : ICommandHandler<T> where
 
     public async Task HandleAsync(T command, CancellationToken cancellationToken = default)
     {
-        var module = command.GetModuleName();
-        var name = command.GetType().Name.Underscore();
-        var messageContext = _messageContextProvider.Get(command);
-        var requestId = _context.RequestId;
-        var traceId = _context.TraceId;
-        var userId = _context.Identity?.Id;
-        var messageId = messageContext?.MessageId;
-        var correlationId = messageContext?.Context.CorrelationId ?? _context.CorrelationId;
-        _logger.LogInformation("Handling a command: {Name} ({Module}) [Request ID: {RequestId}, Message ID: {MessageId}, Correlation ID: {CorrelationId}, Trace ID: '{TraceId}', User ID: '{UserId}]'...",
+        string module = command.GetModuleName();
+        string name = command.GetType().Name.Underscore();
+        IMessageContext messageContext = _messageContextProvider.Get(command);
+        Guid requestId = _context.RequestId;
+        string traceId = _context.TraceId;
+        Guid? userId = _context.Identity?.Id;
+        Guid? messageId = messageContext?.MessageId;
+        Guid correlationId = messageContext?.Context.CorrelationId ?? _context.CorrelationId;
+        _logger.LogInformation(
+            "Handling a command: {Name} ({Module}) [Request ID: {RequestId}, Message ID: {MessageId}, Correlation ID: {CorrelationId}, Trace ID: '{TraceId}', User ID: '{UserId}]'...",
             name, module, requestId, messageId, correlationId, traceId, userId);
         await _handler.HandleAsync(command, cancellationToken);
-        _logger.LogInformation("Handled a command: {Name} ({Module}) [Request ID: {RequestId}, Message ID: {MessageId}, Correlation ID: {CorrelationId}, Trace ID: '{TraceId}', User ID: '{UserId}']",
+        _logger.LogInformation(
+            "Handled a command: {Name} ({Module}) [Request ID: {RequestId}, Message ID: {MessageId}, Correlation ID: {CorrelationId}, Trace ID: '{TraceId}', User ID: '{UserId}']",
             name, module, requestId, messageId, correlationId, traceId, userId);
     }
 }

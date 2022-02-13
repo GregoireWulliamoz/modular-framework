@@ -1,5 +1,5 @@
-using System.Collections.Generic;
 using Modular.Infrastructure.Logging.Options;
+using FileOptions = Modular.Infrastructure.Logging.Options.FileOptions;
 
 namespace Modular.Infrastructure.Logging;
 

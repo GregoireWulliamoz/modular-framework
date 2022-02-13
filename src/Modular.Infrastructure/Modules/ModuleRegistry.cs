@@ -1,10 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading;
-using System.Threading.Tasks;
-
-namespace Modular.Infrastructure.Modules;
+﻿namespace Modular.Infrastructure.Modules;
 
 public sealed class ModuleRegistry : IModuleRegistry
 {
@@ -15,7 +9,7 @@ public sealed class ModuleRegistry : IModuleRegistry
         => _broadcastRegistrations.Where(x => x.Key == key);
 
     public ModuleRequestRegistration GetRequestRegistration(string path)
-        => _requestRegistrations.TryGetValue(path, out var registration) ? registration : null;
+        => _requestRegistrations.TryGetValue(path, out ModuleRequestRegistration registration) ? registration : null;
 
     public void AddBroadcastAction(Type requestType, Func<object, CancellationToken, Task> action)
     {

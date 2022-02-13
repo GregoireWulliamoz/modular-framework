@@ -1,19 +1,17 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
-using Serilog;
-using Serilog.Events;
-using Serilog.Filters;
 using Modular.Abstractions.Commands;
 using Modular.Abstractions.Contexts;
 using Modular.Abstractions.Events;
 using Modular.Abstractions.Queries;
 using Modular.Infrastructure.Logging.Decorators;
 using Modular.Infrastructure.Logging.Options;
+using Serilog;
+using Serilog.Events;
+using Serilog.Filters;
+using FileOptions = Modular.Infrastructure.Logging.Options.FileOptions;
 
 namespace Modular.Infrastructure.Logging;
 
@@ -39,13 +37,16 @@ public static class Extensions
         {
             var logger = ctx.RequestServices.GetRequiredService<ILogger<IContext>>();
             var context = ctx.RequestServices.GetRequiredService<IContext>();
-            logger.LogInformation("Started processing a request [Request ID: '{RequestId}', Correlation ID: '{CorrelationId}', Trace ID: '{TraceId}', User ID: '{UserId}']...",
+            logger.LogInformation(
+                "Started processing a request [Request ID: '{RequestId}', Correlation ID: '{CorrelationId}', Trace ID: '{TraceId}', User ID: '{UserId}']...",
                 context.RequestId, context.CorrelationId, context.TraceId, context.Identity.IsAuthenticated ? context.Identity.Id : string.Empty);
-                
+
             await next();
-                
-            logger.LogInformation("Finished processing a request with status code: {StatusCode} [Request ID: '{RequestId}', Correlation ID: '{CorrelationId}', Trace ID: '{TraceId}', User ID: '{UserId}']",
-                ctx.Response.StatusCode, context.RequestId, context.CorrelationId, context.TraceId, context.Identity.IsAuthenticated ? context.Identity.Id : string.Empty);
+
+            logger.LogInformation(
+                "Finished processing a request with status code: {StatusCode} [Request ID: '{RequestId}', Correlation ID: '{CorrelationId}', Trace ID: '{TraceId}', User ID: '{UserId}']",
+                ctx.Response.StatusCode, context.RequestId, context.CorrelationId, context.TraceId,
+                context.Identity.IsAuthenticated ? context.Identity.Id : string.Empty);
         });
 
         return app;
@@ -76,7 +77,7 @@ public static class Extensions
     private static void MapOptions(LoggerOptions loggerOptions, AppOptions appOptions,
         LoggerConfiguration loggerConfiguration, string environmentName)
     {
-        var level = GetLogEventLevel(loggerOptions.Level);
+        LogEventLevel level = GetLogEventLevel(loggerOptions.Level);
 
         loggerConfiguration.Enrich.FromLogContext()
             .MinimumLevel.Is(level)
@@ -85,14 +86,14 @@ public static class Extensions
             .Enrich.WithProperty("Instance", appOptions.Instance)
             .Enrich.WithProperty("Version", appOptions.Version);
 
-        foreach (var (key, value) in loggerOptions.Tags ?? new Dictionary<string, object>())
+        foreach ((string key, object value) in loggerOptions.Tags ?? new Dictionary<string, object>())
         {
             loggerConfiguration.Enrich.WithProperty(key, value);
         }
 
-        foreach (var (key, value) in loggerOptions.Overrides ?? new Dictionary<string, string>())
+        foreach ((string key, string value) in loggerOptions.Overrides ?? new Dictionary<string, string>())
         {
-            var logLevel = GetLogEventLevel(value);
+            LogEventLevel logLevel = GetLogEventLevel(value);
             loggerConfiguration.MinimumLevel.Override(key, logLevel);
         }
 
@@ -107,9 +108,9 @@ public static class Extensions
 
     private static void Configure(LoggerConfiguration loggerConfiguration, LoggerOptions options)
     {
-        var consoleOptions = options.Console ?? new ConsoleOptions();
-        var fileOptions = options.File ?? new FileOptions();
-        var seqOptions = options.Seq ?? new SeqOptions();
+        ConsoleOptions consoleOptions = options.Console ?? new ConsoleOptions();
+        FileOptions fileOptions = options.File ?? new FileOptions();
+        SeqOptions seqOptions = options.Seq ?? new SeqOptions();
 
         if (consoleOptions.Enabled)
         {
@@ -118,8 +119,8 @@ public static class Extensions
 
         if (fileOptions.Enabled)
         {
-            var path = string.IsNullOrWhiteSpace(fileOptions.Path) ? "logs/logs.txt" : fileOptions.Path;
-            if (!Enum.TryParse<RollingInterval>(fileOptions.Interval, true, out var interval))
+            string path = string.IsNullOrWhiteSpace(fileOptions.Path) ? "logs/logs.txt" : fileOptions.Path;
+            if (!Enum.TryParse<RollingInterval>(fileOptions.Interval, true, out RollingInterval interval))
             {
                 interval = RollingInterval.Day;
             }
@@ -134,7 +135,7 @@ public static class Extensions
     }
 
     private static LogEventLevel GetLogEventLevel(string level)
-        => Enum.TryParse<LogEventLevel>(level, true, out var logLevel)
+        => Enum.TryParse<LogEventLevel>(level, true, out LogEventLevel logLevel)
             ? logLevel
             : LogEventLevel.Information;
 }

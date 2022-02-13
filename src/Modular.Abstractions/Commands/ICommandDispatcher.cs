@@ -1,7 +1,4 @@
-﻿using System.Threading;
-using System.Threading.Tasks;
-
-namespace Modular.Abstractions.Commands;
+﻿namespace Modular.Abstractions.Commands;
 
 public interface ICommandDispatcher
 {

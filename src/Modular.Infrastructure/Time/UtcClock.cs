@@ -1,5 +1,4 @@
-﻿using System;
-using Modular.Abstractions.Time;
+﻿using Modular.Abstractions.Time;
 
 namespace Modular.Infrastructure.Time;
 

@@ -1,5 +1,3 @@
-using System.Collections.Generic;
-
 namespace Modular.Infrastructure.Api;
 
 public sealed class CorsOptions

@@ -1,5 +1,4 @@
-﻿using System;
-using System.Text.Json;
+﻿using System.Text.Json;
 using System.Text.Json.Serialization;
 
 namespace Modular.Infrastructure.Serialization;
@@ -10,7 +9,7 @@ public class SystemTextJsonSerializer : IJsonSerializer
     {
         PropertyNameCaseInsensitive = true,
         PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
-        Converters = {new JsonStringEnumConverter()}
+        Converters = { new JsonStringEnumConverter() }
     };
 
     public string Serialize<T>(T value) => JsonSerializer.Serialize(value, Options);

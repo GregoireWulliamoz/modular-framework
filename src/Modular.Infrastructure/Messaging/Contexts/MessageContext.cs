@@ -1,5 +1,4 @@
-﻿using System;
-using Modular.Abstractions.Contexts;
+﻿using Modular.Abstractions.Contexts;
 using Modular.Abstractions.Messaging;
 
 namespace Modular.Infrastructure.Messaging.Contexts;

@@ -1,14 +1,12 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-
-namespace Modular.Abstractions.Queries;
+﻿namespace Modular.Abstractions.Queries;
 
 public class Paged<T> : PagedBase
 {
     public IReadOnlyList<T> Items { get; set; } = Array.Empty<T>();
 
     public bool Empty => Items is null || !Items.Any();
+
+    public static Paged<T> AsEmpty => new();
 
     public Paged()
     {
@@ -33,8 +31,6 @@ public class Paged<T> : PagedBase
     public static Paged<T> From(PagedBase result, IReadOnlyList<T> items)
         => new(items, result.CurrentPage, result.ResultsPerPage,
             result.TotalPages, result.TotalResults);
-
-    public static Paged<T> AsEmpty => new();
 
     public Paged<TResult> Map<TResult>(Func<T, TResult> map)
         => Paged<TResult>.From(this, Items.Select(map).ToList());

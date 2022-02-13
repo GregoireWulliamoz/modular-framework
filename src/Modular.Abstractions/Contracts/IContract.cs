@@ -1,6 +1,3 @@
-using System;
-using System.Collections.Generic;
-
 namespace Modular.Abstractions.Contracts;
 
 public interface IContract

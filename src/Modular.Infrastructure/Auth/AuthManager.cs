@@ -1,7 +1,4 @@
-using System;
-using System.Collections.Generic;
 using System.IdentityModel.Tokens.Jwt;
-using System.Linq;
 using System.Security.Claims;
 using System.Text;
 using Microsoft.IdentityModel.Tokens;
@@ -13,14 +10,14 @@ namespace Modular.Infrastructure.Auth;
 public sealed class AuthManager : IAuthManager
 {
     private static readonly Dictionary<string, IEnumerable<string>> EmptyClaims = new();
-    private readonly AuthOptions _options;
     private readonly IClock _clock;
-    private readonly SigningCredentials _signingCredentials;
     private readonly string _issuer;
+    private readonly AuthOptions _options;
+    private readonly SigningCredentials _signingCredentials;
 
     public AuthManager(AuthOptions options, IClock clock)
     {
-        var issuerSigningKey = options.IssuerSigningKey;
+        string issuerSigningKey = options.IssuerSigningKey;
         if (issuerSigningKey is null)
         {
             throw new InvalidOperationException("Issuer signing key not set.");
@@ -28,14 +25,14 @@ public sealed class AuthManager : IAuthManager
 
         _options = options;
         _clock = clock;
-        _signingCredentials = new SigningCredentials(new SymmetricSecurityKey(Encoding.UTF8.GetBytes(options.IssuerSigningKey)),  SecurityAlgorithms.HmacSha256);
+        _signingCredentials = new SigningCredentials(new SymmetricSecurityKey(Encoding.UTF8.GetBytes(options.IssuerSigningKey)), SecurityAlgorithms.HmacSha256);
         _issuer = options.Issuer;
     }
 
     public JsonWebToken CreateToken(Guid userId, string role = null, string audience = null,
         IDictionary<string, IEnumerable<string>> claims = null)
     {
-        var now = _clock.CurrentDate();
+        DateTime now = _clock.CurrentDate();
         var jwtClaims = new List<Claim>
         {
             new(JwtRegisteredClaimNames.Sub, userId.ToString()),
@@ -56,7 +53,7 @@ public sealed class AuthManager : IAuthManager
         if (claims?.Any() is true)
         {
             var customClaims = new List<Claim>();
-            foreach (var (claim, values) in claims)
+            foreach ((string claim, IEnumerable<string> values) in claims)
             {
                 customClaims.AddRange(values.Select(value => new Claim(claim, value)));
             }
@@ -64,7 +61,7 @@ public sealed class AuthManager : IAuthManager
             jwtClaims.AddRange(customClaims);
         }
 
-        var expires = now.Add(_options.Expiry);
+        DateTime expires = now.Add(_options.Expiry);
 
         var jwt = new JwtSecurityToken(
             _issuer,
@@ -74,7 +71,7 @@ public sealed class AuthManager : IAuthManager
             signingCredentials: _signingCredentials
         );
 
-        var token = new JwtSecurityTokenHandler().WriteToken(jwt);
+        string token = new JwtSecurityTokenHandler().WriteToken(jwt);
 
         return new JsonWebToken
         {

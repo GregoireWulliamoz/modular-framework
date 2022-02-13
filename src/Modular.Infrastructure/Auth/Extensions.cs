@@ -1,8 +1,4 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Text;
-using System.Threading.Tasks;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization.Policy;
@@ -74,7 +70,7 @@ public static class Extensions
             tokenValidationParameters.AuthenticationType = options.AuthenticationType;
         }
 
-        var rawKey = Encoding.UTF8.GetBytes(options.IssuerSigningKey);
+        byte[] rawKey = Encoding.UTF8.GetBytes(options.IssuerSigningKey);
         tokenValidationParameters.IssuerSigningKey = new SymmetricSecurityKey(rawKey);
 
         if (!string.IsNullOrWhiteSpace(options.NameClaimType))
@@ -112,13 +108,13 @@ public static class Extensions
                 {
                     OnMessageReceived = context =>
                     {
-                        if (context.Request.Cookies.TryGetValue(AccessTokenCookieName, out var token))
+                        if (context.Request.Cookies.TryGetValue(AccessTokenCookieName, out string token))
                         {
                             context.Token = token;
                         }
 
                         return Task.CompletedTask;
-                    },
+                    }
                 };
 
                 optionsFactory?.Invoke(o);
@@ -128,11 +124,11 @@ public static class Extensions
         services.AddSingleton(options.Cookie);
         services.AddSingleton(tokenValidationParameters);
 
-        var policies = modules?.SelectMany(x => x.Policies ?? Enumerable.Empty<string>()) ??
-                       Enumerable.Empty<string>();
+        IEnumerable<string> policies = modules?.SelectMany(x => x.Policies ?? Enumerable.Empty<string>()) ??
+                                       Enumerable.Empty<string>();
         services.AddAuthorization(authorization =>
         {
-            foreach (var policy in policies)
+            foreach (string policy in policies)
             {
                 authorization.AddPolicy(policy, x => x.RequireClaim("permissions", policy));
             }
@@ -153,7 +149,7 @@ public static class Extensions
 
             if (ctx.Request.Cookies.ContainsKey(AccessTokenCookieName))
             {
-                var authenticateResult = await ctx.AuthenticateAsync(JwtBearerDefaults.AuthenticationScheme);
+                AuthenticateResult authenticateResult = await ctx.AuthenticateAsync(JwtBearerDefaults.AuthenticationScheme);
                 if (authenticateResult.Succeeded && authenticateResult.Principal is not null)
                 {
                     ctx.User = authenticateResult.Principal;

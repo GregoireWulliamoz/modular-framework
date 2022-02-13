@@ -1,6 +1,3 @@
-using System;
-using System.Linq;
-using System.Threading.Tasks;
 using Humanizer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
@@ -16,23 +13,23 @@ namespace Modular.Infrastructure.Messaging.Outbox;
 
 public sealed class EfOutbox<T> : IOutbox where T : DbContext
 {
-    private readonly T _dbContext;
-    private readonly DbSet<OutboxMessage> _set;
-    private readonly IMessageContextRegistry _messageContextRegistry;
-    private readonly IMessageContextProvider _messageContextProvider;
-    private readonly IClock _clock;
-    private readonly IModuleClient _moduleClient;
     private readonly IAsyncMessageDispatcher _asyncMessageDispatcher;
+    private readonly IClock _clock;
+    private readonly T _dbContext;
     private readonly IJsonSerializer _jsonSerializer;
-    private readonly MessagingOptions _messagingOptions;
     private readonly ILogger<EfOutbox<T>> _logger;
+    private readonly IMessageContextProvider _messageContextProvider;
+    private readonly IMessageContextRegistry _messageContextRegistry;
+    private readonly MessagingOptions _messagingOptions;
+    private readonly IModuleClient _moduleClient;
+    private readonly DbSet<OutboxMessage> _set;
 
     public bool Enabled { get; }
 
     public EfOutbox(T dbContext, IMessageContextRegistry messageContextRegistry,
         IMessageContextProvider messageContextProvider, IClock clock, IModuleClient moduleClient,
         IAsyncMessageDispatcher asyncMessageDispatcher, IJsonSerializer jsonSerializer,
-        MessagingOptions messagingOptions, OutboxOptions outboxOptions,  ILogger<EfOutbox<T>> logger)
+        MessagingOptions messagingOptions, OutboxOptions outboxOptions, ILogger<EfOutbox<T>> logger)
     {
         _dbContext = dbContext;
         _set = dbContext.Set<OutboxMessage>();
@@ -49,7 +46,7 @@ public sealed class EfOutbox<T> : IOutbox where T : DbContext
 
     public async Task SaveAsync(params IMessage[] messages)
     {
-        var module = _dbContext.GetModuleName();
+        string module = _dbContext.GetModuleName();
         if (!Enabled)
         {
             _logger.LogWarning($"Outbox is disabled ('{module}'), outgoing messages won't be saved.");
@@ -62,10 +59,10 @@ public sealed class EfOutbox<T> : IOutbox where T : DbContext
             return;
         }
 
-        var outboxMessages = messages.Where(x => x is not null)
+        OutboxMessage[] outboxMessages = messages.Where(x => x is not null)
             .Select(x =>
             {
-                var context = _messageContextProvider.Get(x);
+                IMessageContext context = _messageContextProvider.Get(x);
                 return new OutboxMessage
                 {
                     Id = context.MessageId,
@@ -92,14 +89,14 @@ public sealed class EfOutbox<T> : IOutbox where T : DbContext
 
     public async Task PublishUnsentAsync()
     {
-        var module = _dbContext.GetModuleName();
+        string module = _dbContext.GetModuleName();
         if (!Enabled)
         {
             _logger.LogWarning($"Outbox is disabled ('{module}'), outgoing messages won't be sent.");
             return;
         }
-            
-        var unsentMessages = await _set.Where(x => x.SentAt == null).ToListAsync();
+
+        List<OutboxMessage> unsentMessages = await _set.Where(x => x.SentAt == null).ToListAsync();
         if (!unsentMessages.Any())
         {
             _logger.LogTrace($"No unsent messages found in outbox ('{module}').");
@@ -107,7 +104,7 @@ public sealed class EfOutbox<T> : IOutbox where T : DbContext
         }
 
         _logger.LogTrace($"Found {unsentMessages.Count} unsent messages in outbox ('{module}'), sending...");
-        foreach (var outboxMessage in unsentMessages)
+        foreach (OutboxMessage outboxMessage in unsentMessages)
         {
             var type = Type.GetType(outboxMessage.Type);
             var message = _jsonSerializer.Deserialize(outboxMessage.Data, type) as IMessage;
@@ -118,13 +115,13 @@ public sealed class EfOutbox<T> : IOutbox where T : DbContext
                 continue;
             }
 
-            var messageId = outboxMessage.Id;
-            var correlationId = outboxMessage.CorrelationId;
-            var sentAt = _clock.CurrentDate();
-            var name = message.GetType().Name.Underscore();
+            Guid messageId = outboxMessage.Id;
+            Guid correlationId = outboxMessage.CorrelationId;
+            DateTime sentAt = _clock.CurrentDate();
+            string name = message.GetType().Name.Underscore();
             _messageContextRegistry.Set(message, new MessageContext(messageId, new Context(correlationId, outboxMessage.TraceId,
                 new IdentityContext(outboxMessage.UserId))));
-                
+
             _logger.LogInformation("Publishing a message from outbox ('{Module}'): {Name} [Message ID: {MessageId}, Correlation ID: {CorrelationId}]...",
                 module, name, messageId, correlationId);
 
@@ -136,7 +133,7 @@ public sealed class EfOutbox<T> : IOutbox where T : DbContext
             {
                 await _moduleClient.PublishAsync(message);
             }
-                
+
             outboxMessage.SentAt = sentAt;
             _set.Update(outboxMessage);
         }
@@ -146,15 +143,15 @@ public sealed class EfOutbox<T> : IOutbox where T : DbContext
 
     public async Task CleanupAsync(DateTime? to = null)
     {
-        var module = _dbContext.GetModuleName();
+        string module = _dbContext.GetModuleName();
         if (!Enabled)
         {
             _logger.LogWarning($"Outbox is disabled ('{module}'), outgoing messages won't be cleaned up.");
             return;
         }
 
-        var dateTo = to ?? _clock.CurrentDate();
-        var sentMessages = await _set.Where(x => x.SentAt != null && x.CreatedAt <= dateTo).ToListAsync();
+        DateTime dateTo = to ?? _clock.CurrentDate();
+        List<OutboxMessage> sentMessages = await _set.Where(x => x.SentAt != null && x.CreatedAt <= dateTo).ToListAsync();
         if (!sentMessages.Any())
         {
             _logger.LogTrace($"No sent messages found in outbox ('{module}') till: {dateTo}.");

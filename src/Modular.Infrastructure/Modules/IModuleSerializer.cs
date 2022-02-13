@@ -1,6 +1,4 @@
-﻿using System;
-
-namespace Modular.Infrastructure.Modules;
+﻿namespace Modular.Infrastructure.Modules;
 
 public interface IModuleSerializer
 {

@@ -1,8 +1,4 @@
-﻿using System;
-using System.Threading;
-using System.Threading.Tasks;
-
-namespace Modular.Infrastructure.Modules;
+﻿namespace Modular.Infrastructure.Modules;
 
 public sealed class ModuleBroadcastRegistration
 {

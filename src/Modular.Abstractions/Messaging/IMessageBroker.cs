@@ -1,7 +1,4 @@
-﻿using System.Threading;
-using System.Threading.Tasks;
-
-namespace Modular.Abstractions.Messaging;
+﻿namespace Modular.Abstractions.Messaging;
 
 public interface IMessageBroker
 {

@@ -1,8 +1,4 @@
-using System;
 using System.Diagnostics;
-using System.Linq;
-using System.Threading;
-using System.Threading.Tasks;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
@@ -12,11 +8,11 @@ namespace Modular.Infrastructure.Messaging.Outbox;
 
 public class OutboxCleanupProcessor : BackgroundService
 {
-    private readonly IServiceScopeFactory _serviceScopeFactory;
     private readonly IClock _clock;
-    private readonly ILogger<OutboxCleanupProcessor> _logger;
-    private readonly TimeSpan _interval;
     private readonly bool _enabled;
+    private readonly TimeSpan _interval;
+    private readonly ILogger<OutboxCleanupProcessor> _logger;
+    private readonly IServiceScopeFactory _serviceScopeFactory;
     private readonly TimeSpan _startDelay;
     private int _isProcessing;
 
@@ -50,12 +46,12 @@ public class OutboxCleanupProcessor : BackgroundService
             _logger.LogTrace("Started cleaning up outbox messages...");
             var stopwatch = new Stopwatch();
             stopwatch.Start();
-            using (var scope = _serviceScopeFactory.CreateScope())
+            using (IServiceScope scope = _serviceScopeFactory.CreateScope())
             {
                 try
                 {
-                    var outboxes = scope.ServiceProvider.GetServices<IOutbox>();
-                    var tasks = outboxes.Select(outbox => outbox.CleanupAsync(_clock.CurrentDate().Subtract(_interval)));
+                    IEnumerable<IOutbox> outboxes = scope.ServiceProvider.GetServices<IOutbox>();
+                    IEnumerable<Task> tasks = outboxes.Select(outbox => outbox.CleanupAsync(_clock.CurrentDate().Subtract(_interval)));
                     await Task.WhenAll(tasks);
                 }
                 catch (Exception exception)

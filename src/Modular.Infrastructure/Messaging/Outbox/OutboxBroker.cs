@@ -1,14 +1,14 @@
-﻿using System;
-using System.Threading.Tasks;
-using Microsoft.Extensions.DependencyInjection;
+﻿using Microsoft.Extensions.DependencyInjection;
 using Modular.Abstractions.Messaging;
 
 namespace Modular.Infrastructure.Messaging.Outbox;
 
 public class OutboxBroker : IOutboxBroker
 {
-    private readonly IServiceProvider _serviceProvider;
     private readonly OutboxTypeRegistry _registry;
+    private readonly IServiceProvider _serviceProvider;
+
+    public bool Enabled { get; }
 
     public OutboxBroker(IServiceProvider serviceProvider, OutboxTypeRegistry registry, OutboxOptions options)
     {
@@ -17,18 +17,16 @@ public class OutboxBroker : IOutboxBroker
         Enabled = options.Enabled;
     }
 
-    public bool Enabled { get; }
-
     public async Task SendAsync(params IMessage[] messages)
     {
-        var message = messages[0]; // Not possible to send messages from different modules at once
-        var outboxType = _registry.Resolve(message);
+        IMessage message = messages[0]; // Not possible to send messages from different modules at once
+        Type outboxType = _registry.Resolve(message);
         if (outboxType is null)
         {
             throw new InvalidOperationException($"Outbox is not registered for module: '{message.GetModuleName()}'.");
         }
 
-        using var scope = _serviceProvider.CreateScope();
+        using IServiceScope scope = _serviceProvider.CreateScope();
         var outbox = (IOutbox)scope.ServiceProvider.GetRequiredService(outboxType);
         await outbox.SaveAsync(messages);
     }

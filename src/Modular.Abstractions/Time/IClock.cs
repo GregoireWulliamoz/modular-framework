@@ -1,6 +1,4 @@
-﻿using System;
-
-namespace Modular.Abstractions.Time;
+﻿namespace Modular.Abstractions.Time;
 
 public interface IClock
 {

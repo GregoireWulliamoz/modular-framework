@@ -1,6 +1,4 @@
-﻿using System;
-
-namespace Modular.Abstractions.Exceptions;
+﻿namespace Modular.Abstractions.Exceptions;
 
 public abstract class ModularException : Exception
 {

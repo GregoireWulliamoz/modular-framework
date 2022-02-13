@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-using Modular.Infrastructure.Serialization;
+﻿using Modular.Infrastructure.Serialization;
 using StackExchange.Redis;
 
 namespace Modular.Infrastructure.Cache;
@@ -39,8 +35,8 @@ public sealed class RedisCache : ICache
         {
             return default;
         }
-            
-        var value = await _database.StringGetAsync(key);
+
+        RedisValue value = await _database.StringGetAsync(key);
         return string.IsNullOrWhiteSpace(value) ? default : _jsonSerializer.Deserialize<T>(value);
     }
 
@@ -52,8 +48,8 @@ public sealed class RedisCache : ICache
             return values;
         }
 
-        var redisKeys = keys.Select(x => (RedisKey) x).ToArray();
-        var redisValues = await _database.StringGetAsync(redisKeys);
+        RedisKey[] redisKeys = keys.Select(x => (RedisKey)x).ToArray();
+        RedisValue[] redisValues = await _database.StringGetAsync(redisKeys);
 
         values.AddRange(from redisValue in redisValues
             where redisValue.HasValue && !redisValue.IsNullOrEmpty

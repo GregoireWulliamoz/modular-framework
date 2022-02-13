@@ -1,7 +1,4 @@
-﻿using System;
-using System.Threading;
-using System.Threading.Tasks;
-using Microsoft.Extensions.Hosting;
+﻿using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Modular.Abstractions.Modules;
 using Modular.Infrastructure.Contexts;
@@ -10,10 +7,10 @@ namespace Modular.Infrastructure.Messaging.Dispatchers;
 
 public sealed class AsyncDispatcherJob : BackgroundService
 {
-    private readonly IMessageChannel _messageChannel;
-    private readonly IModuleClient _moduleClient;
     private readonly ContextAccessor _contextAccessor;
     private readonly ILogger<AsyncDispatcherJob> _logger;
+    private readonly IMessageChannel _messageChannel;
+    private readonly IModuleClient _moduleClient;
 
     public AsyncDispatcherJob(IMessageChannel messageChannel, IModuleClient moduleClient,
         ContextAccessor contextAccessor, ILogger<AsyncDispatcherJob> logger)
@@ -27,7 +24,7 @@ public sealed class AsyncDispatcherJob : BackgroundService
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
         _logger.LogInformation("Running the async dispatcher.");
-        await foreach (var envelope in _messageChannel.Reader.ReadAllAsync(stoppingToken))
+        await foreach (MessageEnvelope envelope in _messageChannel.Reader.ReadAllAsync(stoppingToken))
         {
             try
             {

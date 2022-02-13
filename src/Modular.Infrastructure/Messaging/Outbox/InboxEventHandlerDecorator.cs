@@ -1,6 +1,3 @@
-using System;
-using System.Threading;
-using System.Threading.Tasks;
 using Humanizer;
 using Microsoft.Extensions.DependencyInjection;
 using Modular.Abstractions.Events;
@@ -11,11 +8,11 @@ namespace Modular.Infrastructure.Messaging.Outbox;
 [Decorator]
 public class InboxEventHandlerDecorator<T> : IEventHandler<T> where T : class, IEvent
 {
-    private readonly IEventHandler<T> _handler;
-    private readonly IServiceProvider _serviceProvider;
-    private readonly IMessageContextProvider _messageContextProvider;
-    private readonly InboxTypeRegistry _inboxTypeRegistry;
     private readonly bool _enabled;
+    private readonly IEventHandler<T> _handler;
+    private readonly InboxTypeRegistry _inboxTypeRegistry;
+    private readonly IMessageContextProvider _messageContextProvider;
+    private readonly IServiceProvider _serviceProvider;
 
     public InboxEventHandlerDecorator(IEventHandler<T> handler, IServiceProvider serviceProvider,
         IMessageContextProvider messageContextProvider, InboxTypeRegistry inboxTypeRegistry, OutboxOptions options)
@@ -31,17 +28,17 @@ public class InboxEventHandlerDecorator<T> : IEventHandler<T> where T : class, I
     {
         if (_enabled)
         {
-            var inboxType = _inboxTypeRegistry.Resolve<T>();
+            Type inboxType = _inboxTypeRegistry.Resolve<T>();
             if (inboxType is null)
             {
                 await _handler.HandleAsync(@event, cancellationToken);
                 return;
             }
 
-            using var scope = _serviceProvider.CreateScope();
-            var inbox = (IInbox) _serviceProvider.GetRequiredService(inboxType);
-            var context = _messageContextProvider.Get(@event);
-            var name = @event.GetType().Name.Underscore();
+            using IServiceScope scope = _serviceProvider.CreateScope();
+            var inbox = (IInbox)_serviceProvider.GetRequiredService(inboxType);
+            IMessageContext context = _messageContextProvider.Get(@event);
+            string name = @event.GetType().Name.Underscore();
             await inbox.HandleAsync(context.MessageId, name, () => _handler.HandleAsync(@event, cancellationToken));
             return;
         }

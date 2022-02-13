@@ -1,6 +1,3 @@
-using System;
-using System.Collections.Generic;
-
 namespace Modular.Infrastructure.Auth;
 
 public class AuthOptions
