@@ -24,7 +24,7 @@ public class ExceptionToResponseMapper : IExceptionToResponseMapper
                 HttpStatusCode.InternalServerError)
         };
 
-    private record Error(string Code, string Message);
+    private sealed record Error(string Code, string Message);
 
-    private record ErrorsResponse(params Error[] Errors);
+    private sealed record ErrorsResponse(params Error[] Errors);
 }

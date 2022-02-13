@@ -24,7 +24,7 @@ public sealed class ContextAccessor
         }
     }
 
-    private class ContextHolder
+    private sealed class ContextHolder
     {
         public IContext Context;
     }

@@ -96,12 +96,6 @@ public class ContractRegistry : IContractRegistry
     public IContractRegistry RegisterPath(string path)
         => RegisterPath<Empty, Empty>(path);
 
-    public IContractRegistry RegisterPathWithRequest<TRequest>(string path) where TRequest : class
-        => RegisterPath<TRequest, Empty>(path);
-
-    public IContractRegistry RegisterPathWithResponse<TResponse>(string path) where TResponse : class
-        => RegisterPath<Empty, TResponse>(path);
-
     public IContractRegistry RegisterPath<TRequest, TResponse>(string path)
         where TRequest : class where TResponse : class
     {
@@ -121,6 +115,12 @@ public class ContractRegistry : IContractRegistry
         return this;
     }
 
+    public IContractRegistry RegisterPathWithRequest<TRequest>(string path) where TRequest : class
+        => RegisterPath<TRequest, Empty>(path);
+
+    public IContractRegistry RegisterPathWithResponse<TResponse>(string path) where TResponse : class
+        => RegisterPath<Empty, TResponse>(path);
+
     public void Validate(IEnumerable<Assembly> assemblies)
     {
         _types = assemblies.SelectMany(x => x.GetTypes()).ToList();
@@ -138,7 +138,7 @@ public class ContractRegistry : IContractRegistry
                 throw new ContractException($"Request registration was not found for path: '{path}'.");
             }
 
-            _logger.LogTrace($"Validating the contracts for path: '{path}'...");
+            _logger.LogTrace("Validating the contracts for path: '{path}'...", path);
             if (requestType != typeof(Empty))
             {
                 ValidateContract(requestType, path);
@@ -149,7 +149,7 @@ public class ContractRegistry : IContractRegistry
                 ValidateContract(responseType, path);
             }
 
-            _logger.LogTrace($"Validated the contracts for path: '{path}'.");
+            _logger.LogTrace("Validated the contracts for path: '{path}'.", path);
         }
     }
 
@@ -189,8 +189,8 @@ public class ContractRegistry : IContractRegistry
             throw new ContractException($"Contract: '{contractName}' was not found in module: '{module}'.");
         }
 
-        _logger.LogTrace($"Validating the contract for: '{contractName}', " +
-                         $"from module: '{contractModule}', original module: '{module}'...");
+        _logger.LogTrace("Validating the contract for: '{contractName}', from module: '{contractModule}', original module: '{module}'...", contractName,
+            contractModule, module);
 
         object originalContract = FormatterServices.GetUninitializedObject(originalType);
         Type originalContractType = originalContract.GetType();
@@ -204,19 +204,19 @@ public class ContractRegistry : IContractRegistry
                 contractModule, path);
         }
 
-        _logger.LogTrace($"Successfully validated the contract for: '{contractName}', " +
-                         $"from module: '{contractModule}', original module: '{module}'.");
+        _logger.LogTrace("Successfully validated the contract for: '{contractName}', from module: '{contractModule}', original module: '{module}'.",
+            contractName, contractModule, module);
     }
 
-    private class Empty
+    private sealed class Empty
     {
     }
 
-    private class EmptyContract : Contract<Empty>
+    private sealed class EmptyContract : Contract<Empty>
     {
     }
 
-    private class ContractException : Exception
+    public class ContractException : Exception
     {
         public ContractException(string message) : base(message)
         {

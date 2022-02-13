@@ -6,7 +6,7 @@ namespace Modular.Abstractions.Modules;
 public interface IModule
 {
     string Name { get; }
-    IEnumerable<string> Policies => null;
+    IEnumerable<string> Policies => Array.Empty<string>();
     void Register(IServiceCollection services);
     void Use(IApplicationBuilder app);
 }

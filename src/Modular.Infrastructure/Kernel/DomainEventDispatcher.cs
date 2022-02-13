@@ -29,7 +29,7 @@ public sealed class DomainEventDispatcher : IDomainEventDispatcher
         foreach (IDomainEvent @event in events)
         {
             Type handlerType = typeof(IDomainEventHandler<>).MakeGenericType(@event.GetType());
-            IEnumerable<object?> handlers = scope.ServiceProvider.GetServices(handlerType);
+            IEnumerable<object> handlers = scope.ServiceProvider.GetServices(handlerType);
 
             IEnumerable<Task> tasks = handlers.Select(x => (Task)handlerType
                 .GetMethod(nameof(IDomainEventHandler<IDomainEvent>.HandleAsync))
