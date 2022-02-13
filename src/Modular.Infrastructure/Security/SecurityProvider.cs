@@ -31,7 +31,7 @@ public sealed class SecurityProvider : ISecurityProvider
 
     public string Hash(string data) => _hasher.Hash(data);
 
-    public string Rng(int length, bool removeSpecialChars = true) => _rng.Generate(length, removeSpecialChars);
+    public string Rng(int length = 50, bool removeSpecialChars = true) => _rng.Generate(length, removeSpecialChars);
 
     public string Sanitize(string value) => _urlEncoder.Encode(value);
 }

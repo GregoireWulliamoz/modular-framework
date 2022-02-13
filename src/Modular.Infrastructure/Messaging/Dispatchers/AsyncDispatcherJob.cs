@@ -33,7 +33,7 @@ public sealed class AsyncDispatcherJob : BackgroundService
             }
             catch (Exception exception)
             {
-                _logger.LogError(exception, exception.Message);
+                _logger.LogError(exception, "{message}", exception.Message);
             }
         }
 

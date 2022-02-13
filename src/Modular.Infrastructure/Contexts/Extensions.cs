@@ -18,7 +18,6 @@ public static class Extensions
         app.Use((ctx, next) =>
         {
             ctx.RequestServices.GetRequiredService<ContextAccessor>().Context = new Context(ctx);
-            ;
 
             return next();
         });
